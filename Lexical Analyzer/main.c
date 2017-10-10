@@ -2,25 +2,33 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include "Symbols.h"
 
 typedef struct {
 	int type;
 	char value[10];
-
+	TOKEN *next;
 }TOKEN;
 
-int var_key_state;
+char token;
+FILE *fp;
+int quit;
+char ident_buffer[IDENT_MAX_LENGTH];
 char *code;
 int code_length;
+TOKEN *start, *end;
 
-int variable_or_keyword(char *input, int length, int state);
+int line;
+int col;
+
+int ident_or_reserved();
 int read_file(FILE *fp);
-void remove_comments();
 void print_code();
 
 int main(int argc, char *argv[]) {
-	FILE *fp;
-
+	line = 0;
+	col = 0;
+	quit = 0;
 	/*if (argc < 2) {
 		printf("ERROR: PL/0 file must be provided in arguments!");
 		return -1;
@@ -31,13 +39,49 @@ int main(int argc, char *argv[]) {
 	//read_file(argv[1], strlen(argv[1]));
 	fp = fopen(argv[1], "r");
 
-	read_file(fp);
+	//read_file(fp);
 
-	remove_comments();
+	if (get_token()) {
+		printf("Error File Empty!");
+		return -1;
+	}
+
+	while (!quit) {
+		if (isalpha(token)) {
+
+		} else if (isdigit(token)) {
+
+		} else {
+			if (is_symbol(token)) {
+
+			}
+		}
+	}
+
 
 	print_code();
 
 return 0;
+}
+
+int is_symbol(token) {
+	int i;
+	for (i = 0; i < NUM_SYMBOLS; i++) {
+		if (reserved[i] == token) {
+			if (token == ':') {
+				get_token();
+				if (token == '=') {
+					//put begins on stack
+					return 0;
+				} else {
+					printf("Error : is not a valid symbol. %d:%d", line, col);
+					quit = 1;
+					return -1;
+				}
+			}
+			//put symbol on stack
+		}
+	}
 }
 
 void print_code(){
@@ -48,42 +92,30 @@ void print_code(){
 }
 
 void remove_comments(){
-	char buffer;
-	int in_comments = 0;
-	int count = 0;
 
-	while(count != code_length){
+}
 
-		if(buffer == '/'){
-			if(in_comments == 1){
-				in_comments == 2;
-				continue;
-			}
-			in_comments = 1;
-		}
+int get_token() {
+	if (fscanf(fp, "%c", &token) == EOF)
+		return -1;
 
-		if(in_comments == 2){
-			if(buffer == '\n')
-				in_comments = 0;
-			else
-				continue;
-		}
-		printf("%c", buffer);
-		if(count >= code_length){
-			input = realloc(input, code_length + 500);
-			code_length += 500;
-		}
-		input[count] = buffer;
-		count++;
+	if (token == '\n') {
+		line++;
+		col = 0;
+	} else if ('\t') {
+		col += 5;
+	} else {
+		col++;
 	}
-	code_length = count;
+
+	return 0;
 }
 
 int read_file(FILE *fp) {
 	char buffer;
 	int count = 0;
 
-	input = calloc(500, sizeof(char));
+	code = calloc(500, sizeof(char));
 	code_length = 0;
 
 	while(fscanf(fp, "%c", &buffer) != EOF){
@@ -107,25 +139,32 @@ int number(char *input, int length, int state){
 			return 0;
 }
 
-int variable_or_keyword(char *input, int length, int state) {
+int ident_or_reserved() {
 	int ret = 0;
+	int length = 1;
 
-	if(length == 0)
-		return 1;
+	ident_buffer[0] = token;
 
-	printf("input:%c, length:%d, State:%d\n", *input, length, state);
+	get_token();
 
-	if(state == 1) {
-		if(isalpha(*input)) {
-			return variable_or_keyword(++input, --length, 2);
+	while(length < IDENT_MAX_LENGTH) {
+		if(isalpha(token) || isdigit(token)) {
+			ident_buffer[length++] = token;
+			get_token();
+			continue;
 		}
-		return 0;
-	} else if(state == 2) {
-		if(isalpha(*input) || isdigit(*input)){
-			return variable_or_keyword(++input, --length, 2);
-		}
-		return 0;
+		break;
+	}
+
+	if (check_reserved() == 0) {
+		//put reserved on stack
+	} else {
+		//its an identifier
 	}
 
 	return 0;
+}
+
+int add_to_lexeme(int type) {
+	if(type == )
 }
