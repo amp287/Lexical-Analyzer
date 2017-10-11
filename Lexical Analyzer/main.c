@@ -23,16 +23,17 @@ int col;
 
 int ident_or_reserved();
 void read_file(FILE *fp);
-void print_code();
+void print_lexeme_list();
 void add_to_lexeme(int type, int lex);
+void print_lexeme_table();
 int number();
 int get_token();
 void remove_comments();
 int is_symbol();
 
 int main(int argc, char *argv[]) {
-	line = 0;
-	col = 0;
+	line = 1;
+	col = 1;
 	quit = 0;
 	if (argc < 2) {
 		printf("ERROR: PL/0 file must be provided in arguments!\n");
@@ -41,7 +42,12 @@ int main(int argc, char *argv[]) {
 
 	fp = fopen(argv[1], "r");
 
-	read_file(fp);
+	if (fp == NULL) {
+		printf("Error: %s does not exist!", argv[1]);
+		return -1;
+	}
+
+	//read_file(fp);
 
 	if (get_token()) {
 		printf("Error File Empty!\n");
@@ -52,7 +58,7 @@ int main(int argc, char *argv[]) {
 		if (isalpha(token)) {				//ident or reserved
 			ident_or_reserved();
 		} else if (isdigit(token)) {		//number
-
+			number();
 		} else if (token == ' ' || token == '\t' || token == '\n') {
 			get_token();
 			continue;
@@ -66,43 +72,67 @@ int main(int argc, char *argv[]) {
 		memset(ident_buffer, 0, IDENT_MAX_LENGTH + 1);
 	}
 
-
-	print_code();
+	print_lexeme_table();
+	print_lexeme_list();
 
 return 0;
 }
 
-//TODO: Add in <= >= etc...
 int is_symbol() {
-	int i;
+	int i, is_single = 0, is_doubl = 0;
+	char single[2], doubl[3];
+	single[1] = 0;
+	doubl[2] = 0;
+
+	single[0] = token;
+	doubl[0] = token;
+	get_token();
+	doubl[1] = token;
 
 	for (i = 0; i < NUM_SYMBOLS; i++) {
-		if (symbols[i] == token) {
-			if (token == ':') {
-				if (get_token() == -1)
-					return 0;
-				if (token == '=') {
-					//put becomes on stack
-					add_to_lexeme(1, 13);
-					return 0;
-				} else {
-					printf("Error : is not a valid symbol. %d:%d", line, col);
-					quit = 1;
-					return -1;
-				}
-			}
-			//put symbol on stack
-			add_to_lexeme(1, i);
-			return 0;
+		if (strcmp(symbols[i], single) == 0) {
+			is_single = i + 1;
+		}
+		if (strcmp(symbols[i], doubl) == 0) {
+			is_doubl = i + 1;
 		}
 	}
-	return -1;
+
+	if (!is_single && !is_doubl) {
+		printf("Error: Unknown Symbol [%s] %d:%d", single, line, col);
+		return -1;
+	}
+
+	if (is_single) {
+		strcpy(ident_buffer, single);
+		add_to_lexeme(1, is_single - 1);
+	} else {
+		strcpy(ident_buffer, doubl);
+		add_to_lexeme(1, is_doubl - 1);
+		get_token();
+	}
+
+	return 0;
 }
 
-void print_code(){
-	int i;
-	for(i = 0; i < code_length; i++) {
-		printf("%c", code[i]);
+void print_lexeme_list(){
+	TOKEN *tok = start;
+
+	while (tok != NULL) {
+		if (tok->type == 2)
+			printf("%d %s ", tok->type, tok->value);
+		else
+			printf("%d ", tok->type);
+		tok = tok->next;
+	}
+}
+
+void print_lexeme_table() {
+	TOKEN *tok = start;
+	printf("Lexeme Table:\nLexeme\t\tToken Type\n");
+	while (tok != NULL) {
+		printf("%s\t\t%d\n", tok->value, tok->type);
+		tok = tok->next;
 	}
 }
 
@@ -152,7 +182,7 @@ int get_token() {
 	if (token == '\n') {
 		line++;
 		col = 0;
-	} else if ('\t') {
+	} else if (token == '\t') {
 		col += 5;
 	} else {
 		col++;
@@ -268,19 +298,24 @@ IDENT_RES_EXIT:
 //type: 0 = Reserved word
 //type: 1 = Symbol lex = index in symbol_lex
 //type: 2 = identifier lex = Anyvalue
-//type: 3 = number
+//type: 3 = number lex = Anyvalue
 void add_to_lexeme(int type, int lex) {
 	TOKEN *tok;
+
 	tok = malloc(sizeof(TOKEN));
+	tok->next = NULL;
+
 	if (type == 0) {
 		tok->type = reserved_lex[lex];
-	} else if (type = 1) {
+	} else if (type == 1) {
 		tok->type = symbol_lex[lex];
 	} else if (type == 2) {
 		tok->type = ident_sym;
-		strcpy(tok->value, ident_buffer);
+	} else if (type == 3) {
+		tok->type = num_sym;
 	}
 
+	strcpy(tok->value, ident_buffer);
 
 	if (start == NULL) {
 		start = tok;
