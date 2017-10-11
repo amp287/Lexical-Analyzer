@@ -15,7 +15,7 @@ FILE *fp;
 int quit;
 char ident_buffer[IDENT_MAX_LENGTH + 1];
 char *code;
-int code_length;
+int code_length, code_alloc;
 TOKEN *start, *end;
 
 int line;
@@ -30,11 +30,14 @@ int number();
 int get_token();
 void remove_comments();
 int is_symbol();
+void free_tokens();
+void print_code();
 
 int main(int argc, char *argv[]) {
 	line = 1;
 	col = 1;
 	quit = 0;
+
 	if (argc < 2) {
 		printf("ERROR: PL/0 file must be provided in arguments!\n");
 		return -1;
@@ -47,7 +50,9 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	//read_file(fp);
+	code_alloc = 500;
+	code_length = 0;
+	code = calloc(500, 1);
 
 	if (get_token()) {
 		printf("Error File Empty!\n");
@@ -72,8 +77,11 @@ int main(int argc, char *argv[]) {
 		memset(ident_buffer, 0, IDENT_MAX_LENGTH + 1);
 	}
 
+	print_code();
 	print_lexeme_table();
 	print_lexeme_list();
+
+	free_tokens();
 
 return 0;
 }
@@ -115,6 +123,14 @@ int is_symbol() {
 	return 0;
 }
 
+void print_code(){
+	int i;
+	for(i = 0; i < code_length; i++){
+		printf("%c", code[i]);
+	}
+	printf("\n");
+}
+
 void print_lexeme_list(){
 	TOKEN *tok = start;
 
@@ -125,6 +141,7 @@ void print_lexeme_list(){
 			printf("%d ", tok->type);
 		tok = tok->next;
 	}
+	printf("\n");
 }
 
 void print_lexeme_table() {
@@ -134,6 +151,7 @@ void print_lexeme_table() {
 		printf("%s\t\t%d\n", tok->value, tok->type);
 		tok = tok->next;
 	}
+	printf("\n");
 }
 
 void remove_comments(){
@@ -188,6 +206,11 @@ int get_token() {
 		col++;
 	}
 
+	if(code_length > code_alloc){
+		code_alloc = code_length + 500;
+		code = realloc(code, code_alloc);
+	}
+	code[code_length++] = token;
 	return 0;
 }
 
@@ -324,4 +347,17 @@ void add_to_lexeme(int type, int lex) {
 		end->next = tok;
 		end = tok;
 	}
+}
+
+void free_tokens(){
+	TOKEN *temp = start;
+	TOKEN *next = start->next;
+
+	while(next != NULL){
+		free(temp);
+		temp = next;
+		next = next->next;
+	}
+
+	free(temp);
 }
