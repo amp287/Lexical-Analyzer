@@ -34,6 +34,8 @@ void free_tokens();
 void print_code();
 
 int main(int argc, char *argv[]) {
+	int error = 0;
+
 	line = 1;
 	col = 1;
 	quit = 0;
@@ -60,19 +62,21 @@ int main(int argc, char *argv[]) {
 	}
 
 	while (!quit) {
-		if (isalpha(token)) {				//ident or reserved
-			ident_or_reserved();
+		if (isalpha(token)) {						//ident or reserved
+			if(ident_or_reserved())
+				goto MAIN_EXIT;
 		} else if (isdigit(token)) {		//number
-			number();
+			if(number())
+				goto MAIN_EXIT;
 		} else if (token == ' ' || token == '\t' || token == '\n') {
-			get_token();
+			if(get_token())
+				quit = 1;
 			continue;
 		} else if (token == '/') {
 			remove_comments();
 		} else {
-			if (is_symbol() == 0) {			//Symbol
-
-			}
+			if (is_symbol())							//Symbol
+				goto MAIN_EXIT;
 		}
 		memset(ident_buffer, 0, IDENT_MAX_LENGTH + 1);
 	}
@@ -80,8 +84,9 @@ int main(int argc, char *argv[]) {
 	print_code();
 	print_lexeme_table();
 	print_lexeme_list();
-
+MAIN_EXIT:
 	free_tokens();
+	free(code);
 
 return 0;
 }
@@ -94,7 +99,11 @@ int is_symbol() {
 
 	single[0] = token;
 	doubl[0] = token;
-	get_token();
+
+	if(get_token()){
+		return 0;
+	}
+
 	doubl[1] = token;
 
 	for (i = 0; i < NUM_SYMBOLS; i++) {
@@ -107,7 +116,7 @@ int is_symbol() {
 	}
 
 	if (!is_single && !is_doubl) {
-		printf("Error: Unknown Symbol [%s] %d:%d", single, line, col);
+		printf("Error: Unknown Symbol [%s] at %d:%d", single, line, col);
 		return -1;
 	}
 
@@ -158,6 +167,8 @@ void remove_comments(){
 	int stop = 0;
 	int type = 0;
 
+	ident_buffer[0] = token;
+
 	if (get_token() == -1) {
 		add_to_lexeme(1, 7);
 		return;
@@ -165,7 +176,6 @@ void remove_comments(){
 
 	if (token != '/' && token != '*') {
 		add_to_lexeme(1, 7); // add slash to lexeme not part of comments
-		get_token();
 		return;
 	}
 
@@ -175,13 +185,13 @@ void remove_comments(){
 		type = 2;
 
 	while (!stop) {
-		if (get_token() == -1)
+		if (get_token())
 			return;
 
 		if (type == 1 && token == '\n')
 			break;
 		if (type == 2 && token == '*') {
-			if (get_token() == -1)
+			if (get_token())
 				return;
 			if (token == '/')
 				break;
@@ -238,23 +248,22 @@ int number(){
 	ident_buffer[0] = token;
 
 	//if end of file just assume what we have is an number
-	if (get_token() == -1) {
+	if (get_token() == -1)
 		goto NUMBER_EXIT;
-	}
 
-	 while(length < IDENT_MAX_LENGTH) {
+	 while(length < NUM_MAX_LENGTH) {
 		 if (isdigit(token)) {
 			ident_buffer[length++] = token;
-			get_token();
+			if(get_token())
+				goto NUMBER_EXIT;
 			continue;
 		}
 		 break;
 	}
 
-	 if (length == IDENT_MAX_LENGTH) {
-		 get_token();
+	 if (length == NUM_MAX_LENGTH) {
 		 if (isdigit(token)) {
-			 printf("Error number (%s) exceeds max size... %d:%d", ident_buffer, line, col);
+			 printf("Error number [%s] at %d:%d exceeds max size...\n", ident_buffer, line, col);
 			 return -1;
 		}
 	 }
@@ -290,18 +299,16 @@ int ident_or_reserved() {
 	while(length < IDENT_MAX_LENGTH) {
 		if(isalpha(token) || isdigit(token)) {
 			ident_buffer[length++] = token;
-			if (get_token() == -1) {
+			if (get_token())
 				goto IDENT_RES_EXIT;
-			}
 			continue;
 		}
 		break;
 	}
 
 	if (length == IDENT_MAX_LENGTH) {
-		get_token();
 		if (isalpha(token)) {
-			printf("Error identifier (%s) exceeds max size... %d:%d", ident_buffer, line, col);
+			printf("Error identifier [%s] at %d:%d exceeds max size...\n", ident_buffer, line, col);
 			return -1;
 		}
 	}

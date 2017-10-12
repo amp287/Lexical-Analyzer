@@ -1,8 +1,8 @@
-const m = 7, n = 85;
+const m = 7, n = 85222;
 var  i,x,y,z,q,r;
 procedure mult; //hi im a comment
   var a, b;
-  begin
+  begin :
      a := x;  b := y; z := 0;
      while b > 0 do
      begin
