@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
 	print_lexeme_table();
 	print_lexeme_list();
 MAIN_EXIT:
+printf("HELLO");
 	free_tokens();
 	free(code);
 
@@ -113,6 +114,7 @@ int is_symbol() {
 		if (strcmp(symbols[i], doubl) == 0) {
 			is_doubl = i + 1;
 		}
+		printf("doubl:%s\n", single);
 	}
 
 	if (!is_single && !is_doubl) {
@@ -359,6 +361,9 @@ void add_to_lexeme(int type, int lex) {
 void free_tokens(){
 	TOKEN *temp = start;
 	TOKEN *next = start->next;
+
+	if(start == NULL)
+		return;
 
 	while(next != NULL){
 		free(temp);
