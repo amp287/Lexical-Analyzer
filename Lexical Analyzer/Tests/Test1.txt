@@ -1,4 +1,4 @@
-:const m = 7, n = 85222; 
+:const m = 7, n = 85222;
 var  i,x,y,z,q,r;
 procedure mult; //hi im a comment
   var a, b;

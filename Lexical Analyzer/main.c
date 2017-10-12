@@ -20,9 +20,10 @@ TOKEN *start, *end;
 
 int line;
 int col;
+int prev_col;
+int prev_line;
 
 int ident_or_reserved();
-void read_file(FILE *fp);
 void print_lexeme_list();
 void add_to_lexeme(int type, int lex);
 void print_lexeme_table();
@@ -37,7 +38,7 @@ int main(int argc, char *argv[]) {
 	int error = 0;
 
 	line = 1;
-	col = 1;
+	col = 0;
 	quit = 0;
 
 	if (argc < 2) {
@@ -85,7 +86,6 @@ int main(int argc, char *argv[]) {
 	print_lexeme_table();
 	print_lexeme_list();
 MAIN_EXIT:
-printf("HELLO");
 	free_tokens();
 	free(code);
 
@@ -118,7 +118,7 @@ int is_symbol() {
 	}
 
 	if (!is_single && !is_doubl) {
-		printf("Error: Unknown Symbol [%s] at %d:%d", single, line, col);
+		printf("Error: Unknown Symbol [%s] at %d:%d\n", single, prev_line, prev_col);
 		return -1;
 	}
 
@@ -208,7 +208,8 @@ int get_token() {
 		quit = 1;
 		return -1;
 	}
-
+	prev_col = col;
+	prev_line = line;
 	if (token == '\n') {
 		line++;
 		col = 0;
@@ -224,24 +225,6 @@ int get_token() {
 	}
 	code[code_length++] = token;
 	return 0;
-}
-
-void read_file(FILE *fp) {
-	char buffer;
-	int count = 0;
-
-	code = calloc(500, sizeof(char));
-	code_length = 0;
-
-	while(fscanf(fp, "%c", &buffer) != EOF){
-		if(count >= code_length){
-			code = realloc(code, code_length + 500);
-			code_length += 500;
-		}
-		code[count] = buffer;
-		count++;
-	}
-	code_length = count;
 }
 
 int number(){
@@ -265,7 +248,7 @@ int number(){
 
 	 if (length == NUM_MAX_LENGTH) {
 		 if (isdigit(token)) {
-			 printf("Error number [%s] at %d:%d exceeds max size...\n", ident_buffer, line, col);
+			 printf("Error number [%s] at %d:%d exceeds max size...\n", ident_buffer, prev_line, (int)(prev_col- strlen(ident_buffer)));
 			 return -1;
 		}
 	 }
@@ -310,7 +293,7 @@ int ident_or_reserved() {
 
 	if (length == IDENT_MAX_LENGTH) {
 		if (isalpha(token)) {
-			printf("Error identifier [%s] at %d:%d exceeds max size...\n", ident_buffer, line, col);
+			printf("Error identifier [%s] at %d:%d exceeds max size...\n", ident_buffer, prev_line, (int)(prev_col - strlen(ident_buffer)));
 			return -1;
 		}
 	}
@@ -358,12 +341,20 @@ void add_to_lexeme(int type, int lex) {
 	}
 }
 
-void free_tokens(){
-	TOKEN *temp = start;
-	TOKEN *next = start->next;
-
+void free_tokens() {
+	TOKEN *temp;
+	TOKEN *next;
 	if(start == NULL)
 		return;
+
+	if(start->next == NULL) {
+		free(start);
+		return;
+	}
+
+	temp = start;
+	next = start->next;
+
 
 	while(next != NULL){
 		free(temp);
