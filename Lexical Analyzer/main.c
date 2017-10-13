@@ -103,11 +103,12 @@ int is_symbol() {
 	single[0] = token;
 	doubl[0] = token;
 
+	//if end of file put in garbage for doubl
 	if(get_token()){
-		return 0;
+		doubl[1] = ']';
+	} else {
+		doubl[1] = token;
 	}
-
-	doubl[1] = token;
 
 	for (i = 0; i < NUM_SYMBOLS; i++) {
 		if (strcmp(symbols[i], single) == 0) {
