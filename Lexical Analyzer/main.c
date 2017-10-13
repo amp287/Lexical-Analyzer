@@ -123,13 +123,13 @@ int is_symbol() {
 		return -1;
 	}
 
-	if (is_single) {
-		strcpy(ident_buffer, single);
-		add_to_lexeme(1, is_single - 1);
-	} else {
+	if (is_doubl) {
 		strcpy(ident_buffer, doubl);
 		add_to_lexeme(1, is_doubl - 1);
 		get_token();
+	} else {
+		strcpy(ident_buffer, single);
+		add_to_lexeme(1, is_single - 1);
 	}
 
 	return 0;
