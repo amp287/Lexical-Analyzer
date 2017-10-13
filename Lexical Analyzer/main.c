@@ -1,3 +1,5 @@
+//Austin Peace
+//Sebastian De La Cruz
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -114,7 +116,6 @@ int is_symbol() {
 		if (strcmp(symbols[i], doubl) == 0) {
 			is_doubl = i + 1;
 		}
-		printf("doubl:%s\n", single);
 	}
 
 	if (!is_single && !is_doubl) {

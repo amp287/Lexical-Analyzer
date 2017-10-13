@@ -1,3 +1,5 @@
+//Austin Peace
+//Sebastian De La Cruz
 #define IDENT_MAX_LENGTH 11
 #define NUM_MAX_LENGTH 5
 #define NUM_SYMBOLS 16
