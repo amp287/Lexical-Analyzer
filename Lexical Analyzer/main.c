@@ -147,7 +147,7 @@ void print_lexeme_list(){
 	TOKEN *tok = start;
 
 	while (tok != NULL) {
-		if (tok->type == 2)
+		if (tok->type == 2 || tok->type == 3)
 			printf("%d %s ", tok->type, tok->value);
 		else
 			printf("%d ", tok->type);
@@ -246,6 +246,11 @@ int number(){
 		}
 		 break;
 	}
+
+	 if (isalpha(token)) {
+		 printf("Error Identifier cannot start with a number! %d:%d", line, col);
+		 return -1;
+	 }
 
 	 if (length == NUM_MAX_LENGTH) {
 		 if (isdigit(token)) {
