@@ -222,7 +222,7 @@ int get_token() {
 
 	if(code_length > code_alloc){
 		code_alloc = code_length + 500;
-		code = realloc(code, code_alloc);
+		code = realloc(code, code_alloc * sizeof(int));
 	}
 	code[code_length++] = token;
 	return 0;
