@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include "Symbols.h"
 
-typedef struct TOKEN{
+typedef struct TOKEN {
 	int type;
 	char value[10];
 	struct TOKEN *next;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 	quit = 0;
 
 	if (argc < 2) {
-		printf("ERROR: PL/0 file must be provided in arguments!\n");
+		printf("Error: PL/0 file must be provided in arguments!\n");
 		return -1;
 	}
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 	code = calloc(500, 1);
 
 	if (get_token()) {
-		printf("Error File Empty!\n");
+		printf("Error: File Empty!\n");
 		return -1;
 	}
 
@@ -104,7 +104,7 @@ int is_symbol() {
 	doubl[0] = token;
 
 	//if end of file put in garbage for doubl
-	if(get_token()){
+	if (get_token()) {
 		doubl[1] = ']';
 	} else {
 		doubl[1] = token;
@@ -136,16 +136,22 @@ int is_symbol() {
 	return 0;
 }
 
-void print_code(){
+void print_code() {
 	int i;
-	for(i = 0; i < code_length; i++){
+
+	printf("Source Program:\n");
+
+	for (i = 0; i < code_length; i++) {
 		printf("%c", code[i]);
 	}
-	printf("\n");
+
+	printf("\n\n");
 }
 
-void print_lexeme_list(){
+void print_lexeme_list() {
 	TOKEN *tok = start;
+
+	printf("Lexeme List:\n");
 
 	while (tok != NULL) {
 		if (tok->type == 2 || tok->type == 3)
@@ -154,21 +160,24 @@ void print_lexeme_list(){
 			printf("%d ", tok->type);
 		tok = tok->next;
 	}
+
 	printf("\n");
 }
 
 void print_lexeme_table() {
 	TOKEN *tok = start;
+
 	printf("Lexeme Table:\nLexeme\t\tToken Type\n");
+
 	while (tok != NULL) {
 		printf("%s\t\t%d\n", tok->value, tok->type);
 		tok = tok->next;
 	}
+
 	printf("\n");
 }
 
-void remove_comments(){
-	int stop = 0;
+void remove_comments() {
 	int type = 0;
 
 	ident_buffer[0] = token;
@@ -188,7 +197,7 @@ void remove_comments(){
 	if (token == '*')
 		type = 2;
 
-	while (!stop) {
+	while (1) {
 		if (get_token())
 			return;
 
@@ -221,7 +230,7 @@ int get_token() {
 		col++;
 	}
 
-	if(code_length > code_alloc){
+	if (code_length > code_alloc) {
 		code_alloc = code_length + 500;
 		code = realloc(code, code_alloc * sizeof(int));
 	}
@@ -229,7 +238,7 @@ int get_token() {
 	return 0;
 }
 
-int number(){
+int number() {
 	int length = 1;
 
 	ident_buffer[0] = token;
@@ -238,10 +247,10 @@ int number(){
 	if (get_token() == -1)
 		goto NUMBER_EXIT;
 
-	 while(length < NUM_MAX_LENGTH) {
+	 while (length < NUM_MAX_LENGTH) {
 		 if (isdigit(token)) {
 			ident_buffer[length++] = token;
-			if(get_token())
+			if (get_token())
 				goto NUMBER_EXIT;
 			continue;
 		}
@@ -249,13 +258,13 @@ int number(){
 	}
 
 	 if (isalpha(token)) {
-		 printf("Error Identifier cannot start with a number! %d:%d", line, col);
+		 printf("Error: Identifier cannot start with a number! %d:%d", line, col);
 		 return -1;
 	 }
 
 	 if (length == NUM_MAX_LENGTH) {
 		 if (isdigit(token)) {
-			 printf("Error number [%s] at %d:%d exceeds max size...\n", ident_buffer, prev_line, (int)(prev_col- strlen(ident_buffer)));
+			 printf("Error: Number [%s] at %d:%d exceeds max size...\n", ident_buffer, prev_line, (int)(prev_col- strlen(ident_buffer)));
 			 return -1;
 		}
 	 }
@@ -300,7 +309,7 @@ int ident_or_reserved() {
 
 	if (length == IDENT_MAX_LENGTH) {
 		if (isalpha(token)) {
-			printf("Error identifier [%s] at %d:%d exceeds max size...\n", ident_buffer, prev_line, (int)(prev_col - strlen(ident_buffer)));
+			printf("Error: Identifier [%s] at %d:%d exceeds max size...\n", ident_buffer, prev_line, (int)(prev_col - strlen(ident_buffer)));
 			return -1;
 		}
 	}
@@ -351,6 +360,7 @@ void add_to_lexeme(int type, int lex) {
 void free_tokens() {
 	TOKEN *temp;
 	TOKEN *next;
+
 	if(start == NULL)
 		return;
 
@@ -362,8 +372,7 @@ void free_tokens() {
 	temp = start;
 	next = start->next;
 
-
-	while(next != NULL){
+	while(next != NULL) {
 		free(temp);
 		temp = next;
 		next = next->next;
