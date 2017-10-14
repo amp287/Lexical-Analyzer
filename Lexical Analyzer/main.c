@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 		} else if (isdigit(token)) {		//number
 			if(number())
 				goto MAIN_EXIT;
-		} else if (token == ' ' || token == '\t' || token == '\n') {
+		} else if (token == ' ' || iscntrl(token)) {
 			if(get_token())
 				quit = 1;
 			continue;
